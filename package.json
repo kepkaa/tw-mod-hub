@@ -1,6 +1,6 @@
 {
   "name": "tw-mod-hub",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Kepka Deck — Twitch стримы + чат + модерация + AHK-макросы в одном окне",
   "main": "main.js",
   "author": "kepkaa",
@@ -27,9 +27,17 @@
     "files": ["main.js", "preload.js", "admin.js", "points.js", "make-icon.js", "build/icon.png", "renderer/**/*", "package.json"],
     "asarUnpack": ["node_modules/sql.js/dist/**"],
     "win": { "target": "nsis", "icon": "build/icon.ico" },
-    "nsis": { "oneClick": true, "perMachine": false, "deleteAppDataOnUninstall": false },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "artifactName": "Kepka-Deck-Setup.exe"
+    },
     "publish": [
-      { "provider": "github", "owner": "kepkaa", "repo": "tw-mod-hub" }
+      { "provider": "github", "owner": "kepkaa", "repo": "tw-mod-hub", "releaseType": "release" }
     ]
   }
 }
