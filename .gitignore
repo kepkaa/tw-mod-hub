@@ -1,0 +1,5 @@
+node_modules/
+dist/
+*.log
+a4c093d04bfb542f8af9e9b9732fc1e4
+.env

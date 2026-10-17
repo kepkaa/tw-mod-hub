@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Kepka Deck</title>
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="bg-aurora"><span></span><span></span><span></span></div>
+
+<!-- ЭКРАН ВХОДА: пока не вошёл — остальное не показывается -->
+<div id="loginGate" class="login-gate" hidden>
+  <div class="gate-card glass">
+    <img class="brand-img gate-img" src="icon.svg" alt="Kepka Deck" />
+    <h1>Kepka Deck</h1>
+    <p class="gate-lead">Войди через свой аккаунт Twitch. Без входа стримы, чат и модерация недоступны.</p>
+    <button id="gateLogin" class="go-btn gate-btn">Войти через Twitch</button>
+    <div id="gateMsg" class="gate-msg"></div>
+    <details class="gate-more" hidden>
+      <summary>Свой Client ID (необязательно)</summary>
+      <input id="gateClientId" placeholder="Client ID приложения Twitch" spellcheck="false" />
+      <small>Нужен, только если хочешь использовать своё приложение с dev.twitch.tv (тип «Публичный», Redirect URL <code>http://localhost</code>).</small>
+    </details>
+    <small class="gate-note">Откроется окно Twitch. Твой пароль приложение не видит: оно получает только токен и хранит его на этом компьютере.</small>
+    <div class="credit">made with love by <a href="https://github.com/kepkaa" target="_blank" rel="noreferrer">kepkaa</a>❤️</div>
+  </div>
+</div>
+
+<div id="app">
+  <header class="topbar glass">
+    <button id="btnStreams" class="icon-btn mobile-only" title="Стримы">☰</button>
+    <div class="brand">
+      <img class="brand-img" src="icon.svg" alt="" />
+      <div class="brand-text">
+        <b>Kepka Deck</b>
+        <small id="meLabel">не вошёл</small>
+      </div>
+    </div>
+
+    <div class="topbar-center">
+      <div class="search">
+        <span class="search-ico">🔍</span>
+        <input id="channelInput" type="text" placeholder="Название канала…" spellcheck="false" />
+        <button id="btnGo" class="go-btn">Смотреть</button>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <div class="pill" id="adPill" title="Заблокировано рекламы">🚫 <span id="adCount">0</span></div>
+      <div class="pill" id="latPill" hidden title="Задержка от эфира стримера">⏱ <b id="latVal">—</b></div>
+      <div class="pill" id="pointsPill" hidden title="Баллы канала">💎 <b id="pointsVal">—</b></div>
+      <div class="pill" id="modPill" hidden><span id="modBadge"></span><span id="modNickTxt">🛡 МОД</span></div>
+      <button id="btnPanel" class="icon-btn" title="Настройки (открыть/закрыть)">⚙</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="col streams glass" id="colStreams">
+      <div class="col-head">
+        <h3>Стримы подписок</h3>
+        <button id="btnRefresh" class="icon-btn sm" title="Обновить">↻</button>
+      </div>
+      <div id="streamsList" class="streams-list"></div>
+
+      <div class="follow-block">
+        <div class="col-head">
+          <h3>Мои подписки <small class="h-sub">не в эфире</small><span id="followCount" class="count">0</span></h3>
+        </div>
+        <input id="followSearch" class="follow-search" placeholder="Поиск среди подписок…" spellcheck="false" />
+        <div id="followList" class="follow-list"></div>
+      </div>
+
+      <div class="col-sub">
+        <div class="mini-head">Недавние</div>
+        <div id="recentList" class="chips"></div>
+        <div class="mini-head">Избранное</div>
+        <div id="favList" class="chips"></div>
+      </div>
+      <div class="credit">made with love by <a href="https://github.com/kepkaa" target="_blank" rel="noreferrer">kepkaa</a>❤️</div>
+    </aside>
+
+    <section class="col center">
+      <div class="player-wrap glass">
+        <div id="playerSlot" class="player-slot">
+          <div class="player-empty">
+            <div class="pe-emoji">📺</div>
+            <div>Выбери канал или введи название сверху</div>
+          </div>
+        </div>
+        <div class="player-meta">
+          <div class="pm-left">
+            <div class="pm-avatar" id="chAvatar"></div>
+            <div>
+              <div class="pm-title" id="chName">—</div>
+              <div class="pm-sub" id="chSub">—</div>
+            </div>
+          </div>
+          <div class="pm-right">
+            <button class="ghost-btn" id="btnLive" title="Перезагрузить плеер и вернуться к прямому эфиру">⟳ К лайву</button>
+            <button class="ghost-btn" id="btnFav">★ В избранное</button>
+            <button class="ghost-btn" id="btnOpenTwitch">Открыть на Twitch</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-wrap glass" id="chatWrap">
+        <div class="chat-head">
+          <div class="chat-title">
+            <span class="dot live" id="chatDot"></span>
+            <b>Чат</b>
+            <span class="muted" id="chatStatus">отключён</span>
+          </div>
+          <div class="chat-tools">
+            <button class="ghost-btn sm" id="btnChatMode" title="Официальный чат Twitch: баллы, эмоции, всё как на сайте">Чат Twitch</button>
+            <button class="ghost-btn sm" id="btnChatReconnect">Переподключить</button>
+            <button class="ghost-btn sm" id="btnChatClear">Очистить</button>
+          </div>
+        </div>
+        <div class="chat-body" id="chatBody"></div>
+        <iframe class="chat-embed" id="chatEmbed" hidden allow="clipboard-write"></iframe>
+        <form class="chat-input" id="chatForm">
+          <input id="chatText" type="text" placeholder="Написать в чат…" autocomplete="off" spellcheck="false" />
+          <button type="submit" class="go-btn">Отправить</button>
+        </form>
+      </div>
+    </section>
+
+    <aside class="col panel glass" id="colPanel">
+      <div class="tabs">
+        <button class="tab active" data-tab="mod">🛡 Мод</button>
+        <button class="tab" data-tab="macros">⌨ Макросы</button>
+        <button class="tab" data-tab="hist">📜 История</button>
+        <button class="tab" data-tab="set">⚙ Настройки</button>
+        <button class="tab" data-tab="admin">👑 Админ</button>
+        <button class="icon-btn sm close-panel" id="btnClosePanel" title="Закрыть (Esc)">✕</button>
+      </div>
+
+      <div class="panes">
+        <div class="pane active" data-pane="mod">
+          <div class="mod-only">
+            <div class="card">
+              <div class="card-title">Быстрые действия</div>
+              <div class="mod-target">
+                <input id="modNick" placeholder="ник" spellcheck="false" />
+                <button class="ghost-btn sm" id="modPickFromLast">Из чата</button>
+              </div>
+              <div class="mod-btns">
+                <button class="danger" data-cmd="/ban {nick}">Бан</button>
+                <button data-cmd="/timeout {nick} 600">Мут 10м</button>
+                <button data-cmd="/timeout {nick} 3600">Мут 1ч</button>
+                <button data-cmd="/untimeout {nick}">Анмут</button>
+                <button data-cmd="/unban {nick}">Разбан</button>
+                <button data-cmd="/warn {nick}">Варн</button>
+                <button data-cmd="/mod {nick}">Мод</button>
+                <button data-cmd="/unmod {nick}">Снять мод</button>
+                <button data-cmd="/vip {nick}">VIP</button>
+                <button data-cmd="/unvip {nick}">Снять VIP</button>
+                <button data-cmd="/clear">Очистить</button>
+                <button data-cmd="/slow 10">Slow 10</button>
+                <button data-cmd="/followers 10m">Только подписчики</button>
+                <button data-cmd="/followersoff">Откл. подписчики</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">Заметка о нике</div>
+              <div id="nickMeta" class="nick-meta muted">Введи ник, чтобы посмотреть.</div>
+              <textarea id="nickNote" rows="3" placeholder="Заметка…"></textarea>
+              <button class="ghost-btn sm" id="btnNoteSave">Сохранить заметку</button>
+            </div>
+
+            <div class="card">
+              <div class="card-title">Статистика сегодня</div>
+              <div id="statsBox" class="stats-box"></div>
+            </div>
+          </div>
+
+          <div id="bcWrap" class="mod-only" hidden>
+            <div class="card">
+              <div class="card-title">Мут / бан с выбором времени</div>
+              <select id="modDur">
+                <option value="30">30 сек</option>
+                <option value="60">1 мин</option>
+                <option value="300">5 мин</option>
+                <option value="600" selected>10 мин</option>
+                <option value="1800">30 мин</option>
+                <option value="3600">1 час</option>
+                <option value="21600">6 часов</option>
+                <option value="86400">1 день</option>
+                <option value="604800">1 неделя</option>
+                <option value="1209600">2 недели</option>
+              </select>
+              <div class="mod-grid">
+                <button id="btnMuteDur">🔇 Замутить</button>
+                <button id="btnUnmuteDur">🔊 Размутить</button>
+                <button id="btnBanDur" class="danger">⛔ Забанить</button>
+                <button id="btnUnbanDur">♻ Разбанить</button>
+              </div>
+              <div class="muted small">Ник — из поля «ник» выше или из последнего сообщения в чате.</div>
+            </div>
+
+            <div class="card" id="pollCard">
+              <div class="card-title">📊 Опрос</div>
+              <input id="pollTitle" maxlength="60" placeholder="Вопрос (до 60 символов)" />
+              <div id="pollChoices" class="bc-list">
+                <input class="pc" maxlength="25" placeholder="Вариант 1" />
+                <input class="pc" maxlength="25" placeholder="Вариант 2" />
+              </div>
+              <div class="row">
+                <button class="ghost-btn sm" id="pollAdd">＋ вариант</button>
+                <select id="pollDur" class="auto-w">
+                  <option value="30">30 сек</option>
+                  <option value="60" selected>1 мин</option>
+                  <option value="120">2 мин</option>
+                  <option value="300">5 мин</option>
+                  <option value="600">10 мин</option>
+                </select>
+              </div>
+              <button class="go-btn" id="pollStart">Запустить опрос</button>
+              <div id="pollLive" class="bc-live" hidden></div>
+            </div>
+
+            <div class="card" id="predCard">
+              <div class="card-title">🎯 Ставка</div>
+              <input id="predTitle" maxlength="45" placeholder="Вопрос (до 45 символов)" />
+              <div id="predChoices" class="bc-list">
+                <input class="pc" maxlength="25" placeholder="Исход 1" />
+                <input class="pc" maxlength="25" placeholder="Исход 2" />
+              </div>
+              <div class="row">
+                <button class="ghost-btn sm" id="predAdd">＋ исход</button>
+                <select id="predWin" class="auto-w">
+                  <option value="60">1 мин</option>
+                  <option value="120" selected>2 мин</option>
+                  <option value="300">5 мин</option>
+                  <option value="600">10 мин</option>
+                </select>
+              </div>
+              <button class="go-btn" id="predStart">Запустить ставку</button>
+              <div id="predLive" class="bc-live" hidden></div>
+            </div>
+
+            <div class="card" id="bcHint" hidden>
+              <div class="card-title">Опросы и ставки</div>
+              <div class="muted small">
+                Через API Twitch их может запускать только владелец канала (нужен статус Affiliate/Partner).
+                На чужом канале модератор запускает их в Mod View — кнопка ниже откроет его в браузере.
+              </div>
+              <button class="ghost-btn" id="btnModView">Открыть Mod View</button>
+            </div>
+          </div>
+
+          <div class="no-mod card" id="noModCard" hidden>
+            <div class="nm-emoji">🙃</div>
+            <div class="nm-title">Ты не модератор на этом канале</div>
+            <div class="nm-text muted">Тебе доступны только <b>AHK-макросы</b> и <b>история твоих действий</b>. Всё, что делает панель модератора, будет доступно, если тебя назначат модератором.</div>
+          </div>
+        </div>
+
+        <div class="pane" data-pane="macros">
+          <div class="card">
+            <div class="card-title">Хоткеи (работают даже в фоне)</div>
+            <div class="macros-list" id="macrosList"></div>
+            <div class="row">
+              <button class="ghost-btn sm" id="btnAddMacro">+ Макрос</button>
+              <button class="ghost-btn sm" id="btnSaveMacros">Сохранить</button>
+              <button class="ghost-btn sm" id="btnExportAhk">Экспорт .ahk</button>
+            </div>
+            <div class="muted small">
+              В тексте: <code>{nick}</code> — ник из поля, <code>{msgid}</code> — id последнего сообщения в чате.
+            </div>
+          </div>
+        </div>
+
+        <div class="pane" data-pane="hist">
+          <div class="card">
+            <div class="card-title">История действий</div>
+            <input id="histQuery" placeholder="поиск: ник/канал/действие" />
+            <div id="histList" class="hist-list"></div>
+            <button class="ghost-btn sm" id="btnExportCsv">Экспорт CSV</button>
+          </div>
+        </div>
+
+        <div class="pane" data-pane="set">
+          <div class="card">
+            <div class="card-title">Twitch</div>
+            <div class="row">
+              <input id="clientId" placeholder="Client ID" spellcheck="false" hidden />
+              <button class="ghost-btn sm" id="btnLogin">Войти</button>
+              <button class="ghost-btn sm" id="btnLogout">Выйти</button>
+            </div>
+            <div class="muted small">Вход — в своём личном аккаунте Twitch. Токен хранится только на этом компьютере. «Выйти» удаляет токен и сессию, после этого можно войти под другим аккаунтом.</div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Внешний вид</div>
+            <label class="row"><span>Акцент</span><input type="color" id="accent" /></label>
+            <label class="row"><span>Анимированный фон</span><input type="checkbox" id="aurora" /></label>
+            <label class="row"><span>Компактный режим</span><input type="checkbox" id="compact" /></label>
+            <label class="row"><span>Подтверждать бан</span><input type="checkbox" id="confirmBan" /></label>
+            <label class="row"><span>Автообновление стримов, сек</span><input type="number" id="refreshSec" min="15" max="600" /></label>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Стрим, реклама и баллы</div>
+            <label class="row"><span>Блокировать рекламные запросы</span><input type="checkbox" id="adblock" /></label>
+            <label class="row"><span>Авто-догон эфира, если стрим отстаёт</span><input type="checkbox" id="autoLive" /></label>
+            <label class="row"><span>Авто-сбор бонуса баллов</span><input type="checkbox" id="autoClaim" /></label>
+            <div class="muted small">Заблокировано запросов с момента запуска: <b id="adStat">0</b></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Служебное</div>
+            <button class="ghost-btn sm" id="btnOpenData">Открыть папку настроек</button>
+            <button class="ghost-btn sm" id="btnReset">Сбросить настройки</button>
+            <div class="muted small">Всё хранится у тебя на компьютере (папка — по кнопке выше).</div>
+            <div class="credit">Kepka Deck · made with love by <a href="https://github.com/kepkaa" target="_blank" rel="noreferrer">kepkaa</a>❤️</div>
+          </div>
+        </div>
+
+        <div class="pane" data-pane="admin">
+          <div class="card" id="adminLocked">
+            <div class="card-title">👑 Админ-режим</div>
+            <p class="muted small">
+              Здесь ты задаёшь пароль администратора, объявление для всех пользователей и <b>дополнительные</b>
+              правила блокировки рекламы. Затем экспортируешь <code>remote-config.json</code> и кладёшь его
+              в свой репозиторий (или на любой https-URL) — приложение само подтягивает его раз в час.
+            </p>
+            <input id="adminPw" type="password" placeholder="Пароль (минимум 6 символов)" />
+            <div class="row">
+              <button class="ghost-btn sm" id="btnAdminSetup">Задать пароль</button>
+              <button class="ghost-btn sm" id="btnAdminUnlock">Разблокировать</button>
+            </div>
+            <div class="muted small" id="adminMsg"></div>
+          </div>
+
+          <div id="adminPanel" hidden>
+            <div class="card">
+              <div class="card-title">Объявление</div>
+              <input id="annId" placeholder="ID (например 2025-02-01)" />
+              <textarea id="annText" rows="3" placeholder="Текст объявления…"></textarea>
+            </div>
+            <div class="card">
+              <div class="card-title">Доп. правила блокировки (по одному на строку)</div>
+              <textarea id="adRules" rows="6" placeholder="*://*.example-ads.com/*"></textarea>
+            </div>
+            <div class="card">
+              <div class="card-title">Публикация</div>
+              <input id="remoteUrl" placeholder="https://…/remote-config.json" spellcheck="false" />
+              <div class="row">
+                <button class="ghost-btn sm" id="btnSaveCfg">Сохранить</button>
+                <button class="ghost-btn sm" id="btnExportCfg">Экспорт remote-config.json</button>
+                <button class="ghost-btn sm" id="btnFetchCfg">Подтянуть сейчас</button>
+                <button class="ghost-btn sm" id="btnLockAdmin">Заблокировать</button>
+              </div>
+              <div class="muted small" id="remoteStatus"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <nav class="bottomnav glass mobile-only">
+    <button data-nav="streams" class="active">☰<span>Стримы</span></button>
+    <button data-nav="player">📺<span>Плеер</span></button>
+    <button data-nav="chat">💬<span>Чат</span></button>
+    <button data-nav="panel">⚙<span>Панель</span></button>
+  </nav>
+</div>
+
+<div id="toast" class="toast"></div>
+<div id="sheet" class="sheet" hidden>
+  <div class="sheet-card" id="sheetCard"></div>
+</div>
+
+<script src="https://player.twitch.tv/js/embed/v1.js"></script>
+<script src="app.js"></script>
+
+
+</body>
+</html>

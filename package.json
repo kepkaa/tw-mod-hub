@@ -1,0 +1,35 @@
+{
+  "name": "tw-mod-hub",
+  "version": "1.2.0",
+  "description": "Kepka Deck — Twitch стримы + чат + модерация + AHK-макросы в одном окне",
+  "main": "main.js",
+  "author": "kepkaa",
+  "scripts": {
+    "icon": "node make-icon.js",
+    "prestart": "node make-icon.js",
+    "predist": "node make-icon.js",
+    "prerelease": "node make-icon.js",
+    "start": "electron .",
+    "dist": "electron-builder --win nsis",
+    "release": "electron-builder --win nsis --publish always"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9",
+    "sql.js": "^1.10.3"
+  },
+  "devDependencies": {
+    "electron": ">=33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.twmodhub.app",
+    "productName": "Kepka Deck",
+    "files": ["main.js", "preload.js", "admin.js", "points.js", "make-icon.js", "build/icon.png", "renderer/**/*", "package.json"],
+    "asarUnpack": ["node_modules/sql.js/dist/**"],
+    "win": { "target": "nsis", "icon": "build/icon.ico" },
+    "nsis": { "oneClick": true, "perMachine": false, "deleteAppDataOnUninstall": false },
+    "publish": [
+      { "provider": "github", "owner": "kepkaa", "repo": "tw-mod-hub" }
+    ]
+  }
+}
