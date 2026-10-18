@@ -1,0 +1,14 @@
+{
+  "name": "Kepkaa Deck",
+  "short_name": "Kepkaa Deck",
+  "description": "Стримы Twitch, чат и модерация",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0e0e10",
+  "theme_color": "#0e0e10",
+  "icons": [
+    { "src": "icon.png", "sizes": "any", "type": "image/png", "purpose": "any" }
+  ]
+}

@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e0e10">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Kepkaa Deck">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="icon" href="icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>Kepkaa Deck</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://player.twitch.tv/js/embed/v1.js" async></script>
+</head>
+<body>
+
+<!-- вход -->
+<div id="gate" class="gate" hidden>
+  <div class="gate-card">
+    <img src="icon.png" alt="" class="gate-ico">
+    <h1>Kepkaa Deck</h1>
+    <p>Стримы Twitch, чат и модерация. Войди через свой аккаунт Twitch.</p>
+    <button id="gateLogin" class="go">Войти через Twitch</button>
+    <div id="gateMsg" class="gate-msg"></div>
+  </div>
+</div>
+
+<!-- основное окно -->
+<div id="app" hidden>
+  <header class="top">
+    <button id="btnDrawer" class="ib" aria-label="Каналы">☰</button>
+    <div class="ttl"><b id="chName">Выбери канал</b><small id="chStatus"></small></div>
+    <span id="lag" class="pill" hidden>⏱ <b id="lagVal">—</b></span>
+    <button id="btnLive" class="ib" aria-label="К лайву" title="Перезапустить плеер, догнать эфир">⟳</button>
+    <button id="btnMod" class="ib" aria-label="Модерация" hidden>🛡</button>
+  </header>
+  <div id="banner" class="banner" hidden></div>
+
+  <main id="main">
+    <section id="playerBox">
+      <div id="player"></div>
+      <div id="empty" class="empty">Нажми ☰ и выбери стрим</div>
+    </section>
+    <section id="chatBox">
+      <div id="chat" class="chat"></div>
+      <button id="newBtn" class="newbtn" hidden>↓ новые сообщения</button>
+      <div id="replyBar" class="reply-bar" hidden>
+        <span>↩ Ответ <b id="replyTxt"></b></span>
+        <button type="button" id="replyCancel" class="ib" aria-label="Отменить ответ">✕</button>
+      </div>
+      <form id="form" class="form" autocomplete="off">
+        <input id="msg" type="text" enterkeyhint="send" maxlength="500" placeholder="Написать в чат" autocapitalize="sentences">
+        <button class="send" aria-label="Отправить">➤</button>
+      </form>
+    </section>
+  </main>
+</div>
+
+<div id="scrim" class="scrim" hidden></div>
+
+<!-- список каналов -->
+<aside id="drawer" class="drawer" aria-hidden="true">
+  <div class="dr-head"><b>Каналы</b><button class="ib" data-close>✕</button></div>
+  <form id="openForm" class="open-form" autocomplete="off">
+    <input id="openName" type="text" placeholder="Ник канала" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <button class="go sm">Открыть</button>
+  </form>
+  <div class="dr-title">Сейчас в эфире</div>
+  <div id="followed" class="followed"></div>
+  <div class="dr-foot">
+    <button id="btnReauth" class="ghost">Обновить права</button>
+    <button id="btnLogout" class="ghost">Выйти</button>
+    <small id="who"></small>
+  </div>
+</aside>
+
+<!-- действия над сообщением -->
+<div id="sheet" class="sheet" hidden>
+  <div class="sheet-card">
+    <div class="sh-head">
+      <div class="sh-who"><b id="shNick"></b><small id="shText"></small></div>
+      <button class="ib" data-close>✕</button>
+    </div>
+    <div id="shActions" class="sh-grid"></div>
+  </div>
+</div>
+
+<!-- панель модератора -->
+<div id="modSheet" class="sheet" hidden>
+  <div class="sheet-card tall">
+    <div class="sh-head"><b>Модерация</b><button class="ib" data-close>✕</button></div>
+
+    <div class="card">
+      <h3>Мут / бан по нику</h3>
+      <input id="mNick" type="text" placeholder="ник" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <select id="mDur">
+        <option value="30">30 секунд</option>
+        <option value="60">1 минута</option>
+        <option value="300">5 минут</option>
+        <option value="600" selected>10 минут</option>
+        <option value="1800">30 минут</option>
+        <option value="3600">1 час</option>
+        <option value="86400">1 день</option>
+        <option value="604800">1 неделя</option>
+        <option value="1209600">2 недели</option>
+      </select>
+      <div class="sh-grid">
+        <button id="mMute">🔇 Замутить</button>
+        <button id="mUnmute">🔊 Размутить</button>
+        <button id="mBan" class="danger">⛔ Забанить</button>
+        <button id="mUnban">♻ Разбанить</button>
+      </div>
+    </div>
+
+    <div id="bcOwn">
+      <div class="card">
+        <h3>📊 Опрос</h3>
+        <input id="pollTitle" type="text" maxlength="60" placeholder="Вопрос (до 60 символов)">
+        <div id="pollChoices" class="list">
+          <input class="pc" maxlength="25" placeholder="Вариант 1">
+          <input class="pc" maxlength="25" placeholder="Вариант 2">
+        </div>
+        <div class="row">
+          <button id="pollAdd" class="ghost sm">＋ вариант</button>
+          <select id="pollDur">
+            <option value="30">30 сек</option>
+            <option value="60" selected>1 мин</option>
+            <option value="120">2 мин</option>
+            <option value="300">5 мин</option>
+          </select>
+        </div>
+        <button id="pollStart" class="go">Запустить опрос</button>
+        <div id="pollLive" class="live" hidden></div>
+      </div>
+
+      <div class="card">
+        <h3>🎯 Ставка</h3>
+        <input id="predTitle" type="text" maxlength="45" placeholder="Вопрос (до 45 символов)">
+        <div id="predChoices" class="list">
+          <input class="pc" maxlength="25" placeholder="Исход 1">
+          <input class="pc" maxlength="25" placeholder="Исход 2">
+        </div>
+        <div class="row">
+          <button id="predAdd" class="ghost sm">＋ исход</button>
+          <select id="predWin">
+            <option value="60">1 мин</option>
+            <option value="120" selected>2 мин</option>
+            <option value="300">5 мин</option>
+            <option value="600">10 мин</option>
+          </select>
+        </div>
+        <button id="predStart" class="go">Запустить ставку</button>
+        <div id="predLive" class="live" hidden></div>
+      </div>
+    </div>
+
+    <div id="bcHint" class="card muted">
+      Опросы и ставки через Twitch API может запускать только владелец канала (нужен Affiliate или Partner).
+      На чужом канале модератор запускает их в Mod View на twitch.tv.
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
